@@ -33,14 +33,6 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideFirestoreInstance() = Firebase.firestore
-
-    @Singleton
-    @Provides
-    fun provideAuthInstance() = Firebase.auth
-
-    @Singleton
-    @Provides
     fun provideUserDatabase(
             @ApplicationContext context: Context
     ) = Room.databaseBuilder(context, UserDatabase::class.java, USER_DATABASE_NAME).build()
@@ -66,8 +58,8 @@ object AppModule {
     @Singleton
     @Provides
     fun provideUserRepository(
-        userAuthentication: UserAuthentication,
-        userFirestore: UserFirestore,
+        userAuthentication: UserAuthentication = UserAuthentication(),
+        userFirestore: UserFirestore = UserFirestore(),
         userDao: UserDao
     ) = DefaultUserRepository(userAuthentication, userFirestore, userDao) as IUserRepository
 
@@ -75,7 +67,7 @@ object AppModule {
     @Singleton
     @Provides
     fun provideCustomEventRepository(
-        customEventFirestore: CustomEventFirestore,
+        customEventFirestore: CustomEventFirestore = CustomEventFirestore(),
         customEventDao: CustomEventDao
     ) = DefaultCustomEventRepository(customEventFirestore, customEventDao) as ICustomEventRepository
 

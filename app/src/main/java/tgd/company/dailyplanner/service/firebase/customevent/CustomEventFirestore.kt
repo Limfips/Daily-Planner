@@ -1,5 +1,6 @@
 package tgd.company.dailyplanner.service.firebase.customevent
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.QuerySnapshot
@@ -19,13 +20,14 @@ import tgd.company.dailyplanner.other.FirestorePath
 import tgd.company.dailyplanner.other.Resource
 import javax.inject.Inject
 
-class CustomEventFirestore @Inject constructor(
-    private val firestore: FirebaseFirestore
-) {
+class CustomEventFirestore @Inject constructor() {
+
+    private val firestore = Firebase.firestore
 
     suspend fun saveEvents(userUid: String, events: List<CustomEvent>): Boolean {
         return try {
             firestore
+                .collection("main")
                 .document(FirestorePath.MAIN.value)
                 .collection(userUid)
                 .document(FirestorePath.EVENTS.value)
@@ -40,6 +42,7 @@ class CustomEventFirestore @Inject constructor(
     suspend fun getEvents(userUID: String): Resource<List<CustomEvent>> {
         return try {
             val data = firestore
+                .collection("main")
                 .document(FirestorePath.MAIN.value)
                 .collection(userUID)
                 .document(FirestorePath.EVENTS.value)
@@ -54,6 +57,7 @@ class CustomEventFirestore @Inject constructor(
     suspend fun deleteData(uid: String): Boolean {
         return try {
             firestore
+                .collection("main")
                 .document(FirestorePath.MAIN.value)
                 .collection(uid)
                 .document(FirestorePath.EVENTS.value)

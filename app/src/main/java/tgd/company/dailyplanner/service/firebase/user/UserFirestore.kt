@@ -1,5 +1,6 @@
 package tgd.company.dailyplanner.service.firebase.user
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
@@ -12,13 +13,14 @@ import tgd.company.dailyplanner.other.FirestorePath
 import tgd.company.dailyplanner.other.Resource
 import javax.inject.Inject
 
-class UserFirestore @Inject constructor(
-    private val firestore: FirebaseFirestore
-) {
+class UserFirestore @Inject constructor()  {
+
+    private val firestore = Firebase.firestore
 
     suspend fun saveUserData(user: User): Boolean {
         return try {
             firestore
+                .collection("main")
                 .document(FirestorePath.MAIN.value)
                 .collection(user.uid)
                 .document(FirestorePath.USER.value)
@@ -33,6 +35,7 @@ class UserFirestore @Inject constructor(
     suspend fun getUserData(uid: String): Resource<User> {
         return try {
             val data = firestore
+                .collection("main")
                 .document(FirestorePath.MAIN.value)
                 .collection(uid)
                 .document(FirestorePath.USER.value)
@@ -47,6 +50,7 @@ class UserFirestore @Inject constructor(
     suspend fun deleteData(uid: String): Boolean {
         return try {
             firestore
+                .collection("main")
                 .document(FirestorePath.MAIN.value)
                 .collection(uid)
                 .document(FirestorePath.USER.value)

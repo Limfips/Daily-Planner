@@ -10,4 +10,5 @@ interface IUserRepository {
     fun signOut()
     suspend fun deleteUser()
     fun getCurrentUser(): User?
+    suspend fun init()
 }

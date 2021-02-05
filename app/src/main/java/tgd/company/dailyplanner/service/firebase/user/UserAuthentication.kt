@@ -9,9 +9,9 @@ import kotlinx.coroutines.tasks.await
 import tgd.company.dailyplanner.other.Resource
 import javax.inject.Inject
 
-class UserAuthentication @Inject constructor(
-    private val auth: FirebaseAuth
-) {
+class UserAuthentication @Inject constructor() {
+
+    private val auth = Firebase.auth
 
     fun getCurrentUser(): FirebaseUser? {
         return auth.currentUser
