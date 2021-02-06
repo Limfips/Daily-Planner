@@ -1,10 +1,7 @@
 package tgd.company.dailyplanner.service.firebase.customevent
 
 import android.util.Log
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
-import com.google.firebase.firestore.QuerySnapshot
-import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.*
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
@@ -31,12 +28,37 @@ class CustomEventFirestore @Inject constructor() {
                 .document(FirestorePath.MAIN.value)
                 .collection(userUid)
                 .document(FirestorePath.EVENTS.value)
-                .set(events)
+                .set(events.toMap())
                 .await()
             true
         } catch (e: Exception) {
             false
         }
+    }
+
+    private fun List<CustomEvent>.toMap(): Map<String, CustomEvent> {
+        val result = HashMap<String, CustomEvent>()
+        this.forEach { event ->
+            result[event.id.toString()] = event
+        }
+        return result
+    }
+
+    private fun DocumentSnapshot.toCustomEvents(): List<CustomEvent> {
+        val result = ArrayList<CustomEvent>()
+        data!!.values.forEach { any ->
+            val obj = any as HashMap<*, *>
+            val customEvent = CustomEvent(
+                    obj["userUid"].toString(),
+                    obj["date_start"].toString().toLong(),
+                    obj["date_finish"].toString().toLong(),
+                    obj["name"].toString(),
+                    obj["description"].toString(),
+                    obj["id"].toString().toInt()
+            )
+            result.add(customEvent)
+        }
+        return result
     }
 
     suspend fun getEvents(userUID: String): Resource<List<CustomEvent>> {
@@ -48,7 +70,7 @@ class CustomEventFirestore @Inject constructor() {
                 .document(FirestorePath.EVENTS.value)
                 .get()
                 .await()
-            Resource.success(data.toObject<List<CustomEvent>>())
+            Resource.success(data.toCustomEvents())
         } catch (e: Exception) {
             Resource.error(e.message.toString(), null)
         }

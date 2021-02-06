@@ -12,4 +12,5 @@ interface ICustomEventRepository {
     suspend fun saveDataInRoom(customEvent: CustomEvent)
     suspend fun deleteDataInRoom(customEvent: CustomEvent)
     fun observeCustomEvents(userUid: String): LiveData<List<CustomEvent>>
+    suspend fun clear()
 }

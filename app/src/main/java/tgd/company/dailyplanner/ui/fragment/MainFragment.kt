@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.applandeo.materialcalendarview.EventDay
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.jetbrains.annotations.Nullable
@@ -52,11 +53,30 @@ class MainFragment @Inject constructor(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel = viewModel ?: ViewModelProvider(requireActivity()).get(AppViewModel::class.java)
-
         subscribeToObservers()
 
         val adapter = CustomEventAdapter(requireContext())
         binding.recyclerview.adapter = adapter
+
+        binding.loadOnServer.setOnClickListener {
+            viewModel!!.loadDataInServer { result ->
+                if (result) {
+                    showSnackbar("Данные загружены c сервера")
+                } else {
+                    showSnackbar("Ошибка при загрузки данных")
+                }
+            }
+        }
+
+        binding.saveOnServer.setOnClickListener {
+            viewModel!!.saveDataOnServer { result ->
+                if (result) {
+                    showSnackbar("Данные загружены на сервер")
+                } else {
+                    showSnackbar("Ошибка при отправки данных")
+                }
+            }
+        }
 
         events.observe(viewLifecycleOwner, {
             binding.calendarView.setEvents(it)
@@ -64,18 +84,10 @@ class MainFragment @Inject constructor(
 
         viewModel!!.selectedDay.observe(viewLifecycleOwner) {
             viewModel!!.observeCustomEvents(viewModel!!.getCurrentUser()!!.uid).observe(viewLifecycleOwner) { list ->
+                viewModel!!.updateEvents(list)
                 updateList(list, adapter, it)
             }
         }
-
-        viewModel!!
-            .observeCustomEvents(viewModel!!.getCurrentUser()!!.uid)
-            .observe(viewLifecycleOwner) {
-
-                lifecycleScope.launch {
-                    viewModel!!.saveDataOnServer(viewModel!!.getCurrentUser()!!.uid, it)
-                }
-            }
 
         if (viewModel!!.isStart) {
             viewModel!!.setSelectedDay(binding.calendarView.firstSelectedDate)
@@ -100,6 +112,14 @@ class MainFragment @Inject constructor(
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(callback)
+    }
+
+    private fun showSnackbar(text: String) {
+        Snackbar.make(
+                requireView(),
+                text,
+                Snackbar.LENGTH_LONG
+        ).show()
     }
 
     private fun subscribeToObservers() {

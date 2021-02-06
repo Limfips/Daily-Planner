@@ -21,8 +21,9 @@ class UserViewModel @Inject constructor(
     val loginStatus: LiveData<Resource<User>> = _loginStatus
 
     fun init(function: () -> Unit) = viewModelScope.launch {
-        repository.init()
-        function()
+        repository.init {
+            function()
+        }
     }
 
     fun getCurrentUser(): User? = repository.getCurrentUser()

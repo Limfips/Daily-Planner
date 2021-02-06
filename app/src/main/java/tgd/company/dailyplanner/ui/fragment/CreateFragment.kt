@@ -47,13 +47,14 @@ class CreateFragment @Inject constructor(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel = viewModel ?: ViewModelProvider(requireActivity()).get(AppViewModel::class.java)
 
+        // создаём список временных промежутков (с шагом в 1 час)
+        // и создаёт формат даты
         val items = resources.getStringArray(R.array.time_list)
         val sdf = SimpleDateFormat(getString(R.string.basic_date_format), Locale.ROOT)
 
         viewModel!!.newCustomEventCalendar.observe(viewLifecycleOwner) {
             binding.dateTextViewId.setText(sdf.format(it.time))
         }
-
 
         viewModel!!.setNewCustomEventCalendar(viewModel!!.selectedDay.value!!)
 
@@ -87,6 +88,7 @@ class CreateFragment @Inject constructor(
         }
     }
 
+    // Метод проверяет чтобы все поля были заполнены, кроме описания, оно не обязательное.
     private fun checkInvalidFields(): Boolean {
         binding.nameTextFieldId.error = null
         binding.timeTextFieldId.error = null
@@ -102,6 +104,7 @@ class CreateFragment @Inject constructor(
         return false
     }
 
+    // метод для инициализирования дата пикера
     private fun setDateListener() {
         val newCal = viewModel!!.newCustomEventCalendar.value!!.clone() as Calendar
         val dateSetListener =
@@ -128,8 +131,8 @@ class CreateFragment @Inject constructor(
     }
 
     private fun back() {
-        viewModel!!.setNewCustomEventCalendar(viewModel!!.selectedDay.value!!)
         findNavController().popBackStack()
+        viewModel!!.setNewCustomEventCalendar(viewModel!!.selectedDay.value!!)
     }
 
 

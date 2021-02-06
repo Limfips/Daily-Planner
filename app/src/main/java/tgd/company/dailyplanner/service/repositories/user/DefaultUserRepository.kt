@@ -1,7 +1,6 @@
 package tgd.company.dailyplanner.service.repositories.user
 
 import android.util.Log
-import androidx.lifecycle.LiveData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import tgd.company.dailyplanner.data.user.User
 import tgd.company.dailyplanner.other.Resource
@@ -21,13 +20,14 @@ class DefaultUserRepository
 
     private var currentUser: User? = null
 
-    override suspend fun init() {
+    override suspend fun init(function: () -> Unit) {
         val result = userAuthentication.getCurrentUser()
         if (result != null) {
             val user = userFirestore.getUserData(result.uid)
             currentUser = user.data
             if (currentUser != null) {
                 userDao.insertUser(currentUser!!)
+                function()
             }
         }
     }
@@ -54,7 +54,6 @@ class DefaultUserRepository
         val result = userAuthentication.signInUser(email, password)
         return if (result.status == Status.SUCCESS) {
             val user = userFirestore.getUserData(result.data!!.user!!.uid).data
-            Log.e("asdsadas", user.toString())
             currentUser = user
             userDao.insertUser(currentUser!!)
             Resource.success(user)

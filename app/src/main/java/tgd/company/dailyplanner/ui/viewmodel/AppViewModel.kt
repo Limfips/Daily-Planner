@@ -1,5 +1,6 @@
 package tgd.company.dailyplanner.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -26,7 +27,9 @@ class AppViewModel @Inject constructor(
     val loginStatus: LiveData<Resource<User>> = _loginStatus
 
     fun init(function: () -> Unit) = viewModelScope.launch {
-        userRepository.init()
+        userRepository.init {
+            function()
+        }
         function()
     }
 
@@ -71,6 +74,7 @@ class AppViewModel @Inject constructor(
         customEventRepository.saveDataOnServer(userUid, events)
     }
 
+    // используется в CreateFragment
     fun saveEvent(
         customEvent: CustomEvent
     ) = viewModelScope.launch {
@@ -101,22 +105,26 @@ class AppViewModel @Inject constructor(
         userUid: String
     ) = customEventRepository.observeCustomEvents(userUid)
 
-
-    // CreateFragment-------------------------------------------------------------------------------
-    private var _newCustomEventCalendar = MutableLiveData(Calendar.getInstance())
-    val newCustomEventCalendar: LiveData<Calendar> = _newCustomEventCalendar
-
     var isStart = true
     private var _selectedDay = MutableLiveData(Calendar.getInstance())
     val selectedDay: LiveData<Calendar> = _selectedDay
 
-    fun setNewCustomEventCalendar(calendar: Calendar) {
-        _newCustomEventCalendar.value = calendar
-    }
     fun setSelectedDay(calendar: Calendar) {
         _selectedDay.value = calendar
     }
 
+    // CreateFragment-------------------------------------------------------------------------------
+    // активно используется только в create fragment
+    // при создании CreateFragment получает значение текущего выбранного
+    // дня и задаёт его как значение по умолчанию для нового создаваемого события
+    private var _newCustomEventCalendar = MutableLiveData(Calendar.getInstance())
+    val newCustomEventCalendar: LiveData<Calendar> = _newCustomEventCalendar
+    fun setNewCustomEventCalendar(calendar: Calendar) {
+        _newCustomEventCalendar.value = calendar
+    }
+
+    // получает на входе индекс выбранного промежутка времени из списка предложенных;
+    // получает название события, описание и функцию выполнения после обработки
     fun insertCustomEvent(
         timeIndex: Int,
         name: String,
@@ -145,6 +153,35 @@ class AppViewModel @Inject constructor(
         )
         saveEvent(customEvent)
         function()
+    }
+    //----------------------------------------------------------------------------------------------
+
+    // MainFragment --------------------------------------------------------------------------------
+    private val _events = MutableLiveData<List<CustomEvent>>()
+    fun updateEvents(events: List<CustomEvent>) {
+        _events.postValue(events)
+    }
+    fun saveDataOnServer(function: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val result = customEventRepository.saveDataOnServer(getCurrentUser()!!.uid, _events.value!!)
+            function(result)
+        }
+    }
+
+    fun loadDataInServer(function: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val result = customEventRepository.getDataOnServer(getCurrentUser()!!.uid)
+            if (result.status == Status.SUCCESS) {
+                customEventRepository.clear()
+                result.data!!.forEach {
+                    customEventRepository.saveDataInRoom(it)
+                }.let {
+                    function(true)
+                }
+            } else {
+                function(false)
+            }
+        }
     }
     //----------------------------------------------------------------------------------------------
 }

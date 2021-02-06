@@ -10,6 +10,9 @@ interface CustomEventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCustomEvent(customEvent: CustomEvent)
 
+    @Query("DELETE FROM custom_events_table")
+    suspend fun clear()
+
     @Delete
     suspend fun deleteCustomEvent(customEvent: CustomEvent)
 

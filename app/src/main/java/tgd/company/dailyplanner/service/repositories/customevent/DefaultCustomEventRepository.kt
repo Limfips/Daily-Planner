@@ -27,6 +27,8 @@ class DefaultCustomEventRepository @Inject constructor(
         customEvent: CustomEvent
     ) = customEventDao.deleteCustomEvent(customEvent)
 
+    override suspend fun clear() = customEventDao.clear()
+
     override suspend fun getDataOnServer(
         userUID: String
     ) = customEventFirestore.getEvents(userUID)

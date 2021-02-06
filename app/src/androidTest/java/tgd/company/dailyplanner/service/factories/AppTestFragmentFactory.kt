@@ -19,7 +19,7 @@ class AppTestFragmentFactory @Inject constructor(
     override fun instantiate(classLoader: ClassLoader, className: String): Fragment {
         return when (className) {
             LoginFragment::class.java.name -> LoginFragment(UserViewModel(FakeUserRepositoryAndroidTest()))
-            MainFragment::class.java.name -> MainFragment(AppViewModel(FakeCustomEventRepositoryAndroidTest()))
+            MainFragment::class.java.name -> MainFragment(AppViewModel((FakeCustomEventRepositoryAndroidTest()), FakeUserRepositoryAndroidTest()))
             else -> super.instantiate(classLoader, className)
         }
     }
