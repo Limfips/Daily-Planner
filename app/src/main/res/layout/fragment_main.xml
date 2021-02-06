@@ -10,49 +10,56 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
-            android:orientation="vertical"
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nsvContainer"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:paddingBottom="100dp"
+            android:clipToPadding="false">
 
-            <com.applandeo.materialcalendarview.CalendarView
-                app:eventsEnabled="true"
-                app:type="one_day_picker"
-                android:id="@+id/calendarView"
+            <LinearLayout
+                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="match_parent">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerview"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:layout_marginHorizontal="4dp"
-                android:layout_marginBottom="16dp"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/item_event" />
+                <com.applandeo.materialcalendarview.CalendarView
+                    app:eventsEnabled="true"
+                    app:type="one_day_picker"
+                    android:id="@+id/calendarView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
-            <Button
-                android:id="@+id/loadOnServer"
-                android:text="load in server"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerview"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="4dp"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:listitem="@layout/item_event" />
 
-            <Button
-                android:id="@+id/saveOnServer"
-                android:text="save in server"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+        <com.google.android.material.bottomappbar.BottomAppBar
+            app:hideOnScroll="true"
+            android:id="@+id/bottomAppBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            style="@style/Widget.MaterialComponents.BottomAppBar.Colored"
+            app:navigationIcon="@drawable/ic_baseline_event_24"
+            app:menu="@menu/bottom_app_bar"
+            />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/add_new_button_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|right"
-            android:layout_margin="16dp"
-            android:contentDescription="@string/fab_content_desc"
             app:srcCompat="@drawable/ic_baseline_add_24"
-            tools:ignore="RtlHardcoded" />
+            app:layout_anchor="@id/bottomAppBar"/>
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

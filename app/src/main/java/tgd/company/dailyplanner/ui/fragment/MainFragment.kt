@@ -56,25 +56,32 @@ class MainFragment @Inject constructor(
         subscribeToObservers()
 
         val adapter = CustomEventAdapter(requireContext())
+        // recyclerView.smoothScrollToPosition(0); - для перемотки в начало списка
         binding.recyclerview.adapter = adapter
 
-        binding.loadOnServer.setOnClickListener {
-            viewModel!!.loadDataInServer { result ->
-                if (result) {
-                    showSnackbar("Данные загружены c сервера")
-                } else {
-                    showSnackbar("Ошибка при загрузки данных")
+        binding.bottomAppBar.setOnMenuItemClickListener { menuItem ->
+            when(menuItem.itemId) {
+                R.id.loadOnServer -> {
+                    viewModel!!.loadDataInServer { result ->
+                        if (result) {
+                            showSnackbar("Данные загружены c сервера")
+                        } else {
+                            showSnackbar("Ошибка при загрузки данных")
+                        }
+                    }
+                    true
                 }
-            }
-        }
-
-        binding.saveOnServer.setOnClickListener {
-            viewModel!!.saveDataOnServer { result ->
-                if (result) {
-                    showSnackbar("Данные загружены на сервер")
-                } else {
-                    showSnackbar("Ошибка при отправки данных")
+                R.id.saveOnServer -> {
+                    viewModel!!.saveDataOnServer { result ->
+                        if (result) {
+                            showSnackbar("Данные загружены на сервер")
+                        } else {
+                            showSnackbar("Ошибка при отправки данных")
+                        }
+                    }
+                    true
                 }
+                 else -> false
             }
         }
 
@@ -119,7 +126,7 @@ class MainFragment @Inject constructor(
                 requireView(),
                 text,
                 Snackbar.LENGTH_LONG
-        ).show()
+        ).setAnchorView(binding.addNewButtonId).show()
     }
 
     private fun subscribeToObservers() {
