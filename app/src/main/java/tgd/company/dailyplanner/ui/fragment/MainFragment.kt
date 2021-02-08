@@ -1,5 +1,7 @@
 package tgd.company.dailyplanner.ui.fragment
 
+import android.annotation.SuppressLint
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,12 +12,11 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.applandeo.materialcalendarview.EventDay
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import org.jetbrains.annotations.Nullable
 import tgd.company.dailyplanner.R
 import tgd.company.dailyplanner.data.customevent.CustomEvent
@@ -56,8 +57,34 @@ class MainFragment @Inject constructor(
         subscribeToObservers()
 
         val adapter = CustomEventAdapter(requireContext())
-        // recyclerView.smoothScrollToPosition(0); - для перемотки в начало списка
         binding.recyclerview.adapter = adapter
+
+        BottomSheetBehavior
+                .from(binding.bottomSheetBehavior)
+                .addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+                    @SuppressLint("SwitchIntDef")
+                    override fun onStateChanged(bottomSheet: View, newState: Int) {}
+                    override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                        if (slideOffset > 0.1f) {
+                            binding.mainFragmentRoot.setBackgroundColor(Color.parseColor("#70000000"))
+                        } else {
+                            binding.mainFragmentRoot.setBackgroundColor(Color.parseColor("#00000000"))
+                        }
+                    }
+                })
+
+
+        binding.closeBehaviorView.setOnClickListener {
+            BottomSheetBehavior
+                    .from(binding.bottomSheetBehavior)
+                    .state = BottomSheetBehavior.STATE_HIDDEN
+        }
+
+        binding.bottomAppBar.setNavigationOnClickListener {
+            BottomSheetBehavior
+                    .from(binding.bottomSheetBehavior)
+                    .state = BottomSheetBehavior.STATE_EXPANDED
+        }
 
         binding.bottomAppBar.setOnMenuItemClickListener { menuItem ->
             when(menuItem.itemId) {
