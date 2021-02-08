@@ -28,8 +28,20 @@ class CustomEventAdapter(private val context: Context) :
         return CustomEventListAdapterViewHolder.create(parent)
     }
 
+    private var onItemClickListener: ((CustomEvent) -> Unit)? = null
+    fun setOnItemClickListener(listener: (CustomEvent) -> Unit) {
+        onItemClickListener = listener
+    }
+
     override fun onBindViewHolder(holder: CustomEventListAdapterViewHolder, position: Int) {
         holder.bind(getItem(position), context)
+        holder.itemView.apply {
+            setOnClickListener {
+                onItemClickListener?.let { click ->
+                    click(getItem(position))
+                }
+            }
+        }
     }
 
     class CustomEventListAdapterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

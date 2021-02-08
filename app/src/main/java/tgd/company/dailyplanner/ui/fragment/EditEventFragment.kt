@@ -2,31 +2,30 @@ package tgd.company.dailyplanner.ui.fragment
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import androidx.activity.OnBackPressedCallback
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.jetbrains.annotations.Nullable
 import tgd.company.dailyplanner.R
-import tgd.company.dailyplanner.databinding.CreateFragmentBinding
+import tgd.company.dailyplanner.databinding.FragmentEditEventBinding
 import tgd.company.dailyplanner.ui.viewmodel.AppViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
-class CreateFragment @Inject constructor(
+class EditEventFragment @Inject constructor(
     @Nullable
-    private var viewModel: AppViewModel?
-): Fragment(R.layout.create_fragment) {
+    var viewModel: AppViewModel?
+) : Fragment(R.layout.fragment_edit_event) {
 
-    private var _binding: CreateFragmentBinding? = null
+    private var _binding: FragmentEditEventBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -34,7 +33,7 @@ class CreateFragment @Inject constructor(
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = CreateFragmentBinding.inflate(inflater, container, false)
+        _binding = FragmentEditEventBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -43,9 +42,10 @@ class CreateFragment @Inject constructor(
         _binding = null
     }
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         viewModel = viewModel ?: ViewModelProvider(requireActivity()).get(AppViewModel::class.java)
+
 
         // создаём список временных промежутков (с шагом в 1 час)
         // и создаёт формат даты
@@ -56,9 +56,15 @@ class CreateFragment @Inject constructor(
             binding.dateTextViewId.setText(sdf.format(it.time))
         }
 
-        viewModel!!.setNewCustomEventCalendar(viewModel!!.selectedDay.value!!)
+        binding.nameEditTextId.setText(viewModel!!.selectedCustomEvent.value!!.name)
+        binding.descriptionEditTextId.setText(viewModel!!.selectedCustomEvent.value!!.description)
 
-        setTimeAdapter(items)
+        val editCustomEventCalendar = Calendar.getInstance()
+        editCustomEventCalendar.timeInMillis = viewModel!!.selectedCustomEvent.value!!.date_start
+
+        viewModel!!.setNewCustomEventCalendar(editCustomEventCalendar)
+
+        setTimeAdapter(items, editCustomEventCalendar.get(Calendar.HOUR_OF_DAY))
         setDateListener()
 
         val callback = object : OnBackPressedCallback(true) {
@@ -73,7 +79,7 @@ class CreateFragment @Inject constructor(
             if (checkInvalidFields()) return@setOnClickListener
 
             val timeIndex = items.indexOf(binding.timeTextViewId.text.toString())
-            viewModel!!.insertCustomEvent(
+            viewModel!!.updateCustomEvent(
                 timeIndex,
                 binding.nameEditTextId.text.toString(),
                 binding.descriptionEditTextId.text.toString()
@@ -120,8 +126,9 @@ class CreateFragment @Inject constructor(
         }
     }
 
-    private fun setTimeAdapter(items: Array<String>) {
+    private fun setTimeAdapter(items: Array<String>, timeIndex: Int) {
         val adapter = ArrayAdapter(requireContext(), R.layout.list_item, items)
+        (binding.timeTextFieldId.editText as? AutoCompleteTextView)?.setText(items[timeIndex])
         (binding.timeTextFieldId.editText as? AutoCompleteTextView)?.setAdapter(adapter)
     }
 

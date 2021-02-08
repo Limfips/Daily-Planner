@@ -87,10 +87,18 @@ class AppViewModel @Inject constructor(
         customEventRepository.deleteDataInServer(userUID)
     }
 
-    suspend fun deleteEvent(
-        customEvent: CustomEvent
-    ) = viewModelScope.launch {
-        customEventRepository.deleteDataInRoom(customEvent)
+    fun deleteEvent(
+        customEvent: CustomEvent? = null
+    ) {
+        viewModelScope.launch {
+            if (customEvent == null) {
+                customEventRepository.deleteDataInRoom(_selectedCustomEvent.value!!)
+                setSelectedCustomEvent(null)
+                _createdItemState.postValue(true)
+            } else {
+                customEventRepository.deleteDataInRoom(customEvent)
+            }
+        }
     }
 
     suspend fun loadDataInServer(
@@ -123,6 +131,39 @@ class AppViewModel @Inject constructor(
         _newCustomEventCalendar.value = calendar
     }
 
+    fun updateCustomEvent(
+        timeIndex: Int,
+        name: String,
+        description: String,
+        function: () -> Unit
+    ) {
+        val start: Calendar = _newCustomEventCalendar.value!!.clone() as Calendar
+        val finish: Calendar = _newCustomEventCalendar.value!!.clone() as Calendar
+        start.set(Calendar.HOUR_OF_DAY, timeIndex)
+        start.set(Calendar.MINUTE, 0)
+
+        if (timeIndex == 23) {
+            finish.set(Calendar.HOUR_OF_DAY, 0)
+            finish.set(Calendar.MINUTE, 0)
+        } else {
+            finish.set(Calendar.HOUR_OF_DAY, timeIndex + 1)
+            finish.set(Calendar.MINUTE, 0)
+        }
+
+        val customEvent = CustomEvent(
+            getCurrentUser()!!.uid,
+            start.timeInMillis,
+            finish.timeInMillis,
+            name,
+            description,
+            selectedCustomEvent.value!!.id
+        )
+        saveEvent(customEvent)
+        setSelectedCustomEvent(null)
+        _editedItemState.postValue(true)
+        function()
+    }
+
     // получает на входе индекс выбранного промежутка времени из списка предложенных;
     // получает название события, описание и функцию выполнения после обработки
     fun insertCustomEvent(
@@ -152,11 +193,31 @@ class AppViewModel @Inject constructor(
             description
         )
         saveEvent(customEvent)
+        _createdItemState.postValue(true)
         function()
     }
     //----------------------------------------------------------------------------------------------
 
     // MainFragment --------------------------------------------------------------------------------
+    private val _deletedItemState = MutableLiveData(false)
+    fun setDeletedItemState(state: Boolean) {
+        _deletedItemState.value = state
+    }
+    val deletedItemState: LiveData<Boolean> = _deletedItemState
+
+    private val _createdItemState = MutableLiveData(false)
+    fun setCreatedItemState(state: Boolean) {
+        _createdItemState.value = state
+    }
+    val createdItemState: LiveData<Boolean> = _createdItemState
+
+    private val _editedItemState = MutableLiveData(false)
+    fun setEditedItemState(state: Boolean) {
+        _editedItemState.value = state
+    }
+    val editedItemState: LiveData<Boolean> = _editedItemState
+
+
     private val _events = MutableLiveData<List<CustomEvent>>()
     fun updateEvents(events: List<CustomEvent>) {
         _events.postValue(events)
@@ -182,6 +243,15 @@ class AppViewModel @Inject constructor(
                 function(false)
             }
         }
+    }
+    //----------------------------------------------------------------------------------------------
+
+    // MainFragment --------------------------------------------------------------------------------
+    private val _selectedCustomEvent = MutableLiveData<CustomEvent?>()
+    val selectedCustomEvent: LiveData<CustomEvent?> = _selectedCustomEvent
+
+    fun setSelectedCustomEvent(customEvent: CustomEvent?) {
+        _selectedCustomEvent.postValue(customEvent)
     }
     //----------------------------------------------------------------------------------------------
 }

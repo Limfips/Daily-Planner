@@ -92,25 +92,18 @@
                 <View
                     android:id="@+id/closeBehaviorView"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_height="100dp"/>
                 <androidx.core.widget.NestedScrollView
-                    android:background="@android:color/holo_green_dark"
+                    android:background="@android:color/white"
                     android:id="@+id/content"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1">
-                    <LinearLayout
-                        android:orientation="vertical"
+                    android:layout_height="match_parent">
+                    <fragment
+                        android:id="@+id/cedContainer"
+                        android:name="tgd.company.dailyplanner.ui.fragment.CustomEventDetailsFragment"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-                        <androidx.cardview.widget.CardView
-                            app:cardBackgroundColor="@android:color/holo_green_dark"
-                            android:layout_width="match_parent"
-                            android:layout_height="100dp">
-
-                        </androidx.cardview.widget.CardView>
-                    </LinearLayout>
+                        android:layout_height="match_parent"
+                        tools:ignore="Instantiatable" />
                 </androidx.core.widget.NestedScrollView>
             </LinearLayout>
 

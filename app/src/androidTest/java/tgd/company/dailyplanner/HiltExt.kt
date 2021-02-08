@@ -1,4 +1,4 @@
-//package tgd.company.dailyplanner
+package tgd.company.dailyplanner
 //
 //
 //import android.content.ComponentName

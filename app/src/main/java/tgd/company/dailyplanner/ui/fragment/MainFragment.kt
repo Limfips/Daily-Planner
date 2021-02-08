@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -57,6 +58,12 @@ class MainFragment @Inject constructor(
         subscribeToObservers()
 
         val adapter = CustomEventAdapter(requireContext())
+        adapter.setOnItemClickListener { customEvent ->
+            viewModel!!.setSelectedCustomEvent(customEvent)
+            BottomSheetBehavior
+                .from(binding.bottomSheetBehavior)
+                .state = BottomSheetBehavior.STATE_EXPANDED
+        }
         binding.recyclerview.adapter = adapter
 
         BottomSheetBehavior
@@ -73,17 +80,18 @@ class MainFragment @Inject constructor(
                     }
                 })
 
+        binding.bottomAppBar.setNavigationOnClickListener {
+            if (viewModel!!.selectedCustomEvent.value != null) {
+                BottomSheetBehavior
+                    .from(binding.bottomSheetBehavior)
+                    .state = BottomSheetBehavior.STATE_EXPANDED
+            }
+        }
 
         binding.closeBehaviorView.setOnClickListener {
             BottomSheetBehavior
                     .from(binding.bottomSheetBehavior)
                     .state = BottomSheetBehavior.STATE_HIDDEN
-        }
-
-        binding.bottomAppBar.setNavigationOnClickListener {
-            BottomSheetBehavior
-                    .from(binding.bottomSheetBehavior)
-                    .state = BottomSheetBehavior.STATE_EXPANDED
         }
 
         binding.bottomAppBar.setOnMenuItemClickListener { menuItem ->
@@ -142,22 +150,57 @@ class MainFragment @Inject constructor(
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                requireActivity().finish()
+                if (BottomSheetBehavior
+                        .from(binding.bottomSheetBehavior)
+                        .state == BottomSheetBehavior.STATE_EXPANDED) {
+                    BottomSheetBehavior
+                        .from(binding.bottomSheetBehavior)
+                        .state = BottomSheetBehavior.STATE_HIDDEN
+                } else {
+                    requireActivity().finish()
+                }
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(callback)
     }
 
+    private fun subscribeToObservers() {
+        viewModel!!.deletedItemState.observe(viewLifecycleOwner)  {
+            if (it == true) {
+                showSnackbar("Deleted")
+                viewModel!!.setDeletedItemState(false)
+            }
+        }
+
+        viewModel!!.createdItemState.observe(viewLifecycleOwner)  {
+            if (it == true) {
+                showSnackbar(getString(R.string.successful_created_event_message))
+                viewModel!!.setCreatedItemState(false)
+            }
+        }
+
+        viewModel!!.editedItemState.observe(viewLifecycleOwner)  {
+            if (it == true) {
+                showSnackbar(getString(R.string.successful_edited_event_message))
+                viewModel!!.setEditedItemState(false)
+            }
+        }
+
+        viewModel!!.selectedCustomEvent.observe(viewLifecycleOwner) { customEvent ->
+            if (customEvent == null) {
+                BottomSheetBehavior
+                    .from(binding.bottomSheetBehavior)
+                    .state = BottomSheetBehavior.STATE_HIDDEN
+            }
+        }
+    }
+
     private fun showSnackbar(text: String) {
         Snackbar.make(
-                requireView(),
+                requireActivity().findViewById(R.id.rootLayout),
                 text,
                 Snackbar.LENGTH_LONG
         ).setAnchorView(binding.addNewButtonId).show()
-    }
-
-    private fun subscribeToObservers() {
-
     }
 
     private fun updateList(
