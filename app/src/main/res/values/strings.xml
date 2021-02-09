@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Daily Planner</string>
     <string name="test_user_uid">TEST_TEST_TEST_USER_UID</string>
     <string name="error_name_text">is not empty</string>
@@ -13,11 +13,17 @@
     <string name="description">Description</string>
     <string name="cancel">Cancel</string>
     <string name="create">Create</string>
-    
+
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="details">Details</string>
     <string name="delete_message_item">Do you really want to delete this?</string>
     <string name="accept">Accept</string>
     <string name="save">save</string>
     <string name="successful_edited_event_message">Изменения сохранены</string>
+    <string name="add_file">Add File</string>
+    <string name="delete">delete</string>
+    <string name="edit">Edit</string>
+    <string name="image_name" tools:ignore="TypographyEllipsis">Image name...</string>
+    <string name="ivitemshoppingimage">ivItemShoppingImage</string>
+    <string name="add_new_button_id">add_new_button_id</string>
 </resources>

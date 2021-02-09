@@ -8,10 +8,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import tgd.company.dailyplanner.data.customevent.CustomEvent
+import tgd.company.dailyplanner.data.fileitem.FileItem
 import tgd.company.dailyplanner.data.user.User
 import tgd.company.dailyplanner.other.Resource
 import tgd.company.dailyplanner.other.Status
 import tgd.company.dailyplanner.service.repositories.customevent.ICustomEventRepository
+import tgd.company.dailyplanner.service.repositories.fileitem.IFileItemRepository
 import tgd.company.dailyplanner.service.repositories.user.IUserRepository
 import java.util.*
 import javax.inject.Inject
@@ -19,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AppViewModel @Inject constructor(
     private val customEventRepository: ICustomEventRepository,
-    private val userRepository: IUserRepository
+    private val userRepository: IUserRepository,
+    private val fileItemRepository: IFileItemRepository
 ): ViewModel() {
 
 
@@ -135,6 +138,7 @@ class AppViewModel @Inject constructor(
         timeIndex: Int,
         name: String,
         description: String,
+        files: List<FileItem>,
         function: () -> Unit
     ) {
         val start: Calendar = _newCustomEventCalendar.value!!.clone() as Calendar
@@ -159,6 +163,7 @@ class AppViewModel @Inject constructor(
             selectedCustomEvent.value!!.id
         )
         saveEvent(customEvent)
+        saveFileItems(selectedCustomEvent.value!!.id!!, files)
         setSelectedCustomEvent(null)
         _editedItemState.postValue(true)
         function()
@@ -233,7 +238,7 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             val result = customEventRepository.getDataOnServer(getCurrentUser()!!.uid)
             if (result.status == Status.SUCCESS) {
-                customEventRepository.clear()
+                customEventRepository.clear(getCurrentUser()!!.uid)
                 result.data!!.forEach {
                     customEventRepository.saveDataInRoom(it)
                 }.let {
@@ -252,6 +257,44 @@ class AppViewModel @Inject constructor(
 
     fun setSelectedCustomEvent(customEvent: CustomEvent?) {
         _selectedCustomEvent.postValue(customEvent)
+    }
+
+    fun observeFileItems(
+            customEventId: Int
+    ) = fileItemRepository.observeFileItems(customEventId)
+
+    fun insertFileItem(
+
+    ) {
+
+    }
+
+    fun saveFileItem(
+            fileItem: FileItem
+    ) {
+        viewModelScope.launch {
+            fileItemRepository.saveDataInRoom(fileItem)
+        }
+    }
+
+    fun saveFileItems(
+            customEventId: Int,
+            fileItems: List<FileItem>
+    ) {
+        viewModelScope.launch {
+            fileItemRepository.clear(customEventId)
+            fileItems.forEach {
+                fileItemRepository.saveDataInRoom(it)
+            }
+        }
+    }
+
+    fun deleteFileItem(
+            fileItem: FileItem
+    ) {
+        viewModelScope.launch {
+            fileItemRepository.deleteDataInRoom(fileItem)
+        }
     }
     //----------------------------------------------------------------------------------------------
 }

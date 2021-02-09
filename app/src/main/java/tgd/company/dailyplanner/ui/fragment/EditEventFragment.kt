@@ -1,37 +1,53 @@
 package tgd.company.dailyplanner.ui.fragment
 
 import android.app.DatePickerDialog
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
+import androidx.recyclerview.widget.GridLayoutManager
+import com.bumptech.glide.RequestManager
 import org.jetbrains.annotations.Nullable
 import tgd.company.dailyplanner.R
+import tgd.company.dailyplanner.data.fileitem.FileItem
 import tgd.company.dailyplanner.databinding.FragmentEditEventBinding
+import tgd.company.dailyplanner.other.Constants
+import tgd.company.dailyplanner.service.adapters.FileItemAdapter
+import tgd.company.dailyplanner.ui.dialog.ImagePickDialog
 import tgd.company.dailyplanner.ui.viewmodel.AppViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
+import kotlin.collections.ArrayList
 
 class EditEventFragment @Inject constructor(
-    @Nullable
-    var viewModel: AppViewModel?
-) : Fragment(R.layout.fragment_edit_event) {
+        @Nullable
+        var viewModel: AppViewModel?,
+        private val fileItemAdapter: FileItemAdapter,
+        private val glide: RequestManager
+) : Fragment(R.layout.fragment_edit_event), ImagePickDialog.NoticeDialogListener {
 
     private var _binding: FragmentEditEventBinding? = null
     private val binding get() = _binding!!
 
+    private val tmpFiles = ArrayList<FileItem>()
+    private val _files = MutableLiveData<List<FileItem>>()
+    private val files: LiveData<List<FileItem>> = _files
+
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         _binding = FragmentEditEventBinding.inflate(inflater, container, false)
         return binding.root
@@ -46,6 +62,21 @@ class EditEventFragment @Inject constructor(
         super.onViewCreated(view, savedInstanceState)
         viewModel = viewModel ?: ViewModelProvider(requireActivity()).get(AppViewModel::class.java)
 
+        setupRecyclerView()
+
+        viewModel!!.observeFileItems(viewModel!!.selectedCustomEvent.value!!.id!!)
+                .observe(viewLifecycleOwner) {
+                    if (it != null) {
+                        tmpFiles.addAll(it)
+                        _files.postValue(tmpFiles)
+                    }
+                }
+
+        files.observe(viewLifecycleOwner) {
+            if (it != null) {
+                fileItemAdapter.fileItems = it
+            }
+        }
 
         // создаём список временных промежутков (с шагом в 1 час)
         // и создаёт формат даты
@@ -77,15 +108,37 @@ class EditEventFragment @Inject constructor(
         binding.canselButtonId.setOnClickListener { back() }
         binding.createButtonId.setOnClickListener {
             if (checkInvalidFields()) return@setOnClickListener
-
             val timeIndex = items.indexOf(binding.timeTextViewId.text.toString())
             viewModel!!.updateCustomEvent(
                 timeIndex,
                 binding.nameEditTextId.text.toString(),
-                binding.descriptionEditTextId.text.toString()
+                binding.descriptionEditTextId.text.toString(),
+                tmpFiles
             ) {
                 back()
             }
+        }
+
+        binding.btnAddFile.setOnClickListener {
+            showNoticeDialog()
+        }
+
+        fileItemAdapter.setonDeleteItemClickListener { item ->
+            tmpFiles.remove(item)
+            _files.postValue(tmpFiles)
+            fileItemAdapter.notifyDataSetChanged()
+        }
+
+        fileItemAdapter.setOnItemClickListener {
+//            startActivity(openFileIntent(Uri.parse(it.roomUrl), requireActivity()))
+        }
+    }
+
+    private fun setupRecyclerView() {
+        fileItemAdapter.setVisibleDeleteIcon(true)
+        binding.rvFileItems.apply {
+            adapter = fileItemAdapter
+            layoutManager = GridLayoutManager(requireContext(), Constants.GRID_SPAN_COUNT)
         }
     }
 
@@ -118,10 +171,10 @@ class EditEventFragment @Inject constructor(
 
         binding.dateTextFieldId.setEndIconOnClickListener {
             DatePickerDialog(
-                requireActivity(), dateSetListener,
-                viewModel!!.newCustomEventCalendar.value!!.get(Calendar.YEAR),
-                viewModel!!.newCustomEventCalendar.value!!.get(Calendar.MONTH),
-                viewModel!!.newCustomEventCalendar.value!!.get(Calendar.DAY_OF_MONTH)
+                    requireActivity(), dateSetListener,
+                    viewModel!!.newCustomEventCalendar.value!!.get(Calendar.YEAR),
+                    viewModel!!.newCustomEventCalendar.value!!.get(Calendar.MONTH),
+                    viewModel!!.newCustomEventCalendar.value!!.get(Calendar.DAY_OF_MONTH)
             ).show()
         }
     }
@@ -135,6 +188,27 @@ class EditEventFragment @Inject constructor(
     private fun back() {
         findNavController().popBackStack()
         viewModel!!.setNewCustomEventCalendar(viewModel!!.selectedDay.value!!)
+    }
+
+    private fun showNoticeDialog() {
+        val dialog = ImagePickDialog(this, glide)
+        dialog.show(requireActivity().supportFragmentManager, "NoticeDialogFragment")
+    }
+
+    override fun onDialogPositiveClick(imageName: String, imageUri: String) {
+        tmpFiles.add(
+            FileItem(
+                name = imageName,
+                roomUrl = imageUri,
+                customEventId = viewModel!!.selectedCustomEvent.value!!.id,
+                userUid = viewModel!!.selectedCustomEvent.value!!.userUid
+            )
+        )
+        _files.postValue(tmpFiles)
+        fileItemAdapter.notifyDataSetChanged()
+    }
+
+    override fun onDialogNegativeClick() {
     }
 
 

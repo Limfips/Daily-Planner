@@ -71,7 +71,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:srcCompat="@drawable/ic_baseline_add_24"
-                app:layout_anchor="@id/bottomAppBar"/>
+                app:layout_anchor="@id/bottomAppBar"
+                android:contentDescription="@string/add_new_button_id" />
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
@@ -93,18 +94,12 @@
                     android:id="@+id/closeBehaviorView"
                     android:layout_width="match_parent"
                     android:layout_height="100dp"/>
-                <androidx.core.widget.NestedScrollView
-                    android:background="@android:color/white"
-                    android:id="@+id/content"
+                <fragment
+                    android:id="@+id/cedContainer"
+                    android:name="tgd.company.dailyplanner.ui.fragment.CustomEventDetailsFragment"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-                    <fragment
-                        android:id="@+id/cedContainer"
-                        android:name="tgd.company.dailyplanner.ui.fragment.CustomEventDetailsFragment"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        tools:ignore="Instantiatable" />
-                </androidx.core.widget.NestedScrollView>
+                    android:layout_height="match_parent"
+                    tools:ignore="FragmentTagUsage,Instantiatable" />
             </LinearLayout>
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
