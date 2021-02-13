@@ -23,4 +23,11 @@
         app:showAsAction="never"
         />
 
+    <item
+        android:id="@+id/signOut"
+        android:title="sign out"
+        android:contentDescription="content_description_more"
+        app:showAsAction="never"
+        />
+
 </menu>

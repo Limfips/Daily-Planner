@@ -24,6 +24,8 @@ import tgd.company.dailyplanner.other.Constants.CUSTOM_EVENT_DATABASE_NAME
 import tgd.company.dailyplanner.other.Constants.FILE_ITEM_DATABASE_NAME
 import tgd.company.dailyplanner.other.Constants.USER_DATABASE_NAME
 import tgd.company.dailyplanner.service.firebase.customevent.CustomEventFirestore
+import tgd.company.dailyplanner.service.firebase.fileitem.FileItemFirestore
+import tgd.company.dailyplanner.service.firebase.fileitem.FileItemStorage
 import tgd.company.dailyplanner.service.firebase.user.UserAuthentication
 import tgd.company.dailyplanner.service.firebase.user.UserFirestore
 import tgd.company.dailyplanner.service.repositories.customevent.DefaultCustomEventRepository
@@ -131,7 +133,9 @@ object AppModule {
     @Singleton
     @Provides
     fun provideFileItemRepository(
-            fileItemDao: FileItemDao
-    ) = DefaultFileItemRepository(fileItemDao) as IFileItemRepository
+            fileItemDao: FileItemDao,
+            fileItemStorage: FileItemStorage,
+            fileItemFirestore: FileItemFirestore
+    ) = DefaultFileItemRepository(fileItemDao, fileItemStorage, fileItemFirestore) as IFileItemRepository
 
 }

@@ -1,9 +1,11 @@
 package tgd.company.dailyplanner.ui.fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -40,14 +42,35 @@ class LoginFragment @Inject constructor(
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel = viewModel ?: ViewModelProvider(requireActivity()).get(UserViewModel::class.java)
-        viewModel!!.init {
-            findNavController().navigate(
-                LoginFragmentDirections.actionLoginFragmentToMainFragment()
-            )
-        }
-
         super.onViewCreated(view, savedInstanceState)
+        viewModel = viewModel ?: ViewModelProvider(requireActivity()).get(UserViewModel::class.java)
+        callbackSetup()
+
+        viewModel?.init { isFinished ->
+            if (isFinished) {
+                findNavController().navigate(
+                        LoginFragmentDirections.actionLoginFragmentToMainFragment()
+                )
+                Log.w("LoginTest", "autoLogin!")
+            } else {
+                Log.w("LoginTest", "error autoLogin!")
+                initView()
+            }
+        }
+    }
+
+    private fun callbackSetup() {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                requireActivity().finish()
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(callback)
+    }
+
+    private fun initView() {
+        binding.pbLogin.visibility = View.GONE
+        binding.lContainer.visibility = View.VISIBLE
         subscribeToObservers()
 
         binding.btnSignIn.setOnClickListener {
@@ -70,14 +93,14 @@ class LoginFragment @Inject constructor(
         viewModel!!.loginStatus.observe(viewLifecycleOwner) { result ->
             when(result.status) {
                 Status.SUCCESS -> {
-                    Snackbar.make(
-                            requireActivity().findViewById(R.id.rootLayout),
-                            "Successful login",
-                            Snackbar.LENGTH_LONG
-                    ).show()
-                    findNavController().navigate(
-                        LoginFragmentDirections.actionLoginFragmentToMainFragment()
-                    )
+                    if (viewModel?.getCurrentUser() != null) {
+                        binding.etEmail.setText("")
+                        binding.etPassword.setText("")
+                        binding.etName.setText("")
+                        findNavController().navigate(
+                                LoginFragmentDirections.actionLoginFragmentToMainFragment()
+                        )
+                    }
                 }
                 Status.ERROR -> {
                     Snackbar.make(

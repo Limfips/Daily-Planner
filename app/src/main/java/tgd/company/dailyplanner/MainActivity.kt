@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
+import com.google.firebase.FirebaseApp
 import dagger.hilt.android.AndroidEntryPoint
 import tgd.company.dailyplanner.R
 import tgd.company.dailyplanner.service.factories.AppFragmentFactory

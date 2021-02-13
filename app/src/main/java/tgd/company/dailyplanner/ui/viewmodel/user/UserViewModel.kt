@@ -17,12 +17,12 @@ class UserViewModel @Inject constructor(
     private val repository: IUserRepository
 ): ViewModel() {
 
-    private val _loginStatus = MutableLiveData<Resource<User>>()
-    val loginStatus: LiveData<Resource<User>> = _loginStatus
+    private val _loginStatus = MutableLiveData<Resource<User?>>()
+    val loginStatus: LiveData<Resource<User?>> = _loginStatus
 
-    fun init(function: () -> Unit) = viewModelScope.launch {
+    fun init(function: (Boolean) -> Unit) = viewModelScope.launch {
         repository.init {
-            function()
+            function(it)
         }
     }
 

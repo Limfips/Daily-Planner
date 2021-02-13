@@ -7,7 +7,6 @@
 
     <TextView
         android:textStyle="bold"
-        android:textColor="@android:color/black"
         android:id="@+id/name_text_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

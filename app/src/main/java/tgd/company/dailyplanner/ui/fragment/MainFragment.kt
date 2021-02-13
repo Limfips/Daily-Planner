@@ -97,7 +97,7 @@ class MainFragment @Inject constructor(
         binding.bottomAppBar.setOnMenuItemClickListener { menuItem ->
             when(menuItem.itemId) {
                 R.id.loadOnServer -> {
-                    viewModel!!.loadDataInServer { result ->
+                    viewModel!!.loadDataInServer(requireContext()) { result ->
                         if (result) {
                             showSnackbar("Данные загружены c сервера")
                         } else {
@@ -107,13 +107,18 @@ class MainFragment @Inject constructor(
                     true
                 }
                 R.id.saveOnServer -> {
-                    viewModel!!.saveDataOnServer { result ->
+                    viewModel!!.saveDataOnServer(requireContext()) { result ->
                         if (result) {
                             showSnackbar("Данные загружены на сервер")
                         } else {
                             showSnackbar("Ошибка при отправки данных")
                         }
                     }
+                    true
+                }
+                R.id.signOut -> {
+                    viewModel!!.signOut()
+                    findNavController().popBackStack()
                     true
                 }
                  else -> false
@@ -125,10 +130,13 @@ class MainFragment @Inject constructor(
         })
 
         viewModel!!.selectedDay.observe(viewLifecycleOwner) {
-            viewModel!!.observeCustomEvents(viewModel!!.getCurrentUser()!!.uid).observe(viewLifecycleOwner) { list ->
-                viewModel!!.updateEvents(list)
-                updateList(list, adapter, it)
+            if (viewModel?.getCurrentUser() != null) {
+                viewModel?.observeCustomEvents(viewModel?.getCurrentUser()?.uid!!)?.observe(viewLifecycleOwner) { list ->
+                    viewModel!!.updateEvents(list)
+                    updateList(list, adapter, it)
+                }
             }
+
         }
 
         if (viewModel!!.isStart) {

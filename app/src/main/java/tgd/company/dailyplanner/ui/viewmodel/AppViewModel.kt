@@ -1,5 +1,6 @@
 package tgd.company.dailyplanner.ui.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -12,6 +13,7 @@ import tgd.company.dailyplanner.data.fileitem.FileItem
 import tgd.company.dailyplanner.data.user.User
 import tgd.company.dailyplanner.other.Resource
 import tgd.company.dailyplanner.other.Status
+import tgd.company.dailyplanner.other.isNetworkAvailable
 import tgd.company.dailyplanner.service.repositories.customevent.ICustomEventRepository
 import tgd.company.dailyplanner.service.repositories.fileitem.IFileItemRepository
 import tgd.company.dailyplanner.service.repositories.user.IUserRepository
@@ -227,27 +229,54 @@ class AppViewModel @Inject constructor(
     fun updateEvents(events: List<CustomEvent>) {
         _events.postValue(events)
     }
-    fun saveDataOnServer(function: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            val result = customEventRepository.saveDataOnServer(getCurrentUser()!!.uid, _events.value!!)
-            function(result)
+    fun saveDataOnServer(context: Context, function: (Boolean) -> Unit) {
+        if (isNetworkAvailable(context)) {
+            viewModelScope.launch {
+                var result = customEventRepository.saveDataOnServer(getCurrentUser()!!.uid, _events.value!!)
+                _events.value!!.forEach { customEvent ->
+                    fileItemRepository.observeFileItems(customEvent.id!!).observeForever {
+                        fileItemRepository.uploadOnServer(it)
+                        viewModelScope.launch {
+                            result = result && fileItemRepository.saveDataInServer(getCurrentUser()!!.uid, it)
+
+                            Log.w("APPVM_TAG", customEvent.toString())
+                        }
+                    }
+                }
+                Log.w("APPVM_TAG", result.toString())
+                function(result)
+            }
+        } else {
+            function(false)
         }
     }
 
-    fun loadDataInServer(function: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            val result = customEventRepository.getDataOnServer(getCurrentUser()!!.uid)
-            if (result.status == Status.SUCCESS) {
-                customEventRepository.clear(getCurrentUser()!!.uid)
-                result.data!!.forEach {
-                    customEventRepository.saveDataInRoom(it)
-                }.let {
-                    function(true)
+    fun loadDataInServer(context: Context, function: (Boolean) -> Unit) {
+        if (isNetworkAvailable(context)) {
+            viewModelScope.launch {
+                val result = customEventRepository.getDataOnServer(getCurrentUser()!!.uid)
+                if (result.status == Status.SUCCESS) {
+                    customEventRepository.clear(getCurrentUser()!!.uid)
+                    result.data!!.forEach { customEvent ->
+                        customEventRepository.saveDataInRoom(customEvent)
+                        val fileItems = fileItemRepository.getDataOnServer(getCurrentUser()!!.uid, customEvent.id!!)
+                        if (fileItems.status == Status.SUCCESS) {
+                            fileItemRepository.clear(customEvent.id)
+                            fileItems.data!!.forEach { fileItem ->
+                                fileItemRepository.saveDataInRoom(fileItem)
+                            }
+                        }
+                    }.let {
+                        function(true)
+                    }
+                } else {
+                    function(false)
                 }
-            } else {
-                function(false)
             }
+        } else {
+            function(false)
         }
+
     }
     //----------------------------------------------------------------------------------------------
 
@@ -263,20 +292,6 @@ class AppViewModel @Inject constructor(
             customEventId: Int
     ) = fileItemRepository.observeFileItems(customEventId)
 
-    fun insertFileItem(
-
-    ) {
-
-    }
-
-    fun saveFileItem(
-            fileItem: FileItem
-    ) {
-        viewModelScope.launch {
-            fileItemRepository.saveDataInRoom(fileItem)
-        }
-    }
-
     fun saveFileItems(
             customEventId: Int,
             fileItems: List<FileItem>
@@ -286,14 +301,6 @@ class AppViewModel @Inject constructor(
             fileItems.forEach {
                 fileItemRepository.saveDataInRoom(it)
             }
-        }
-    }
-
-    fun deleteFileItem(
-            fileItem: FileItem
-    ) {
-        viewModelScope.launch {
-            fileItemRepository.deleteDataInRoom(fileItem)
         }
     }
     //----------------------------------------------------------------------------------------------

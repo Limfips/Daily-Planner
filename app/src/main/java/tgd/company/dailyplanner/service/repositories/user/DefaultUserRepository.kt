@@ -20,15 +20,15 @@ class DefaultUserRepository
 
     private var currentUser: User? = null
 
-    override suspend fun init(function: () -> Unit) {
+    override suspend fun init(function: (Boolean) -> Unit) {
         val result = userAuthentication.getCurrentUser()
         if (result != null) {
             val user = userFirestore.getUserData(result.uid)
             currentUser = user.data
-            if (currentUser != null) {
-                userDao.insertUser(currentUser!!)
-                function()
-            }
+            userDao.insertUser(currentUser!!)
+            function(true)
+        } else {
+            function(false)
         }
     }
 

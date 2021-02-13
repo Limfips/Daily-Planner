@@ -17,19 +17,18 @@ import androidx.fragment.app.DialogFragment
 import com.bumptech.glide.RequestManager
 import tgd.company.dailyplanner.R
 import tgd.company.dailyplanner.other.Constants.IMAGE_TYPE
-import tgd.company.dailyplanner.other.Constants.REQUEST_CODE
 import tgd.company.dailyplanner.other.Constants.REQUEST_CODE_IMAGE
 import tgd.company.dailyplanner.other.getFileItemNameText
 
 class ImagePickDialog(
-    private var listener: NoticeDialogListener,
-    private var glide: RequestManager
+        private var listener: NoticeDialogListener,
+        private var glide: RequestManager
 ) : DialogFragment() {
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.dialog_image_pick, container)
     }
@@ -55,7 +54,7 @@ class ImagePickDialog(
             }
 
             dialogView.findViewById<ImageView>(R.id.ivItemShoppingImage).setOnClickListener {
-                Intent(Intent.ACTION_GET_CONTENT).also { intent ->
+                Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).also { intent ->
                     intent.type = IMAGE_TYPE
                     startActivityForResult(intent, REQUEST_CODE_IMAGE)
                 }
@@ -81,6 +80,10 @@ class ImagePickDialog(
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_IMAGE) {
             data?.data?.let {
+                val takeFlags = (data.flags
+                        and (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        or Intent.FLAG_GRANT_WRITE_URI_PERMISSION))
+                activity?.contentResolver?.takePersistableUriPermission(it, takeFlags)
                 uri = it.toString()
                 glide.load(it).into(dialogView.findViewById(R.id.ivItemShoppingImage))
             }
